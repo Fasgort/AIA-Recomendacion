@@ -4,6 +4,7 @@ import csv
 import numpy as np
 import math
 import operator
+import sys
 
 # Número de usuarios y películas en el conjunto de datos
 user_size = 943 + 1 # Pos 0 vacía, pero es más cómodo
@@ -34,8 +35,12 @@ with open('resources\\ml-100k\\u.data') as csvfile:
 # ------------------
 
 # Calculamos la media de valoración del usuario
-pUser_nRatings = np.count_nonzero(data[pUser])
-pUserMean = data[pUser].sum() / pUser_nRatings
+pUser_nRatings = (data[pUser] != 0).sum()
+if pUser_nRatings == 0:
+    print("User has no ratings. Impossible to make a prediction.")
+    sys.exit(0)
+else:
+    pUserMean = data[pUser].sum() / pUser_nRatings
 
 # Calculo de vecindario
 neighborhood = []
@@ -44,7 +49,7 @@ for nUser in range(user_size):
         continue
     
     # Calculamos la media de valoración del usuario vecino
-    nUser_nRatings = np.count_nonzero(data[nUser])
+    nUser_nRatings = (data[nUser] != 0).sum()
     if nUser_nRatings == 0:
         continue
     nUserMean = data[nUser].sum() / nUser_nRatings
@@ -93,15 +98,14 @@ else:
         nRating = data[nUser][pItem]
         if nSimilitude <= 0 or nRating == 0:
             continue
-        nUser_nRatings = np.count_nonzero(data[nUser])
+        nUser_nRatings = (data[nUser] != 0).sum()
         nUserMean = data[nUser].sum() / nUser_nRatings
-        sumRating += (nRating - nUserMean) * nSimilitude
+        sumRating += nSimilitude * (nRating - nUserMean)
         sumSimilitude += nSimilitude
         neighbourCount += 1
     
     if neighbourCount == 0:
-        prediction = 0.0
-        print("Prediction for user " + str(pUser) + " and item " + str(pItem) + " is " + str(prediction) + ".")
+        print("ERROR: No suitable neighbours could be found. Impossible to make a prediction.")
     else:
         prediction = nUserMean + sumRating/sumSimilitude
         if prediction > 5.0:
