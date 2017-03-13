@@ -12,7 +12,6 @@ item_size = 1682 + 1 # Pos 0 vacía
 
 # Provisional - Usuario y film a predecir
 pUser = 23
-pItem = 770
 
 # Settings
 neighborhoodSize = 30
@@ -83,34 +82,46 @@ for nUser in range(user_size):
 neighborhood.sort(key=operator.itemgetter(1), reverse=True)
 
 # Calculo de predicción
-if data[pUser][pItem] != 0:
-    print("ERROR: Rating already exists. Cannot be predicted.")
-    print("Rating for user " + str(pUser) + " and item " + str(pItem) + " is " + str(data[pUser][pItem]) + ".")
-else:
-    
-    neighbourCount = 0
-    sumRating = 0
-    sumSimilitude = 0
-    
-    for neighbour in range(neighborhoodSize):
-        nUser = neighborhood[neighbour][0]
-        nSimilitude = neighborhood[neighbour][1]
-        nRating = data[nUser][pItem]
-        if nSimilitude <= 0 or nRating == 0:
-            continue
-        nUser_nRatings = (data[nUser] != 0).sum()
-        nUserMean = data[nUser].sum() / nUser_nRatings
-        sumRating += nSimilitude * (nRating - nUserMean)
-        sumSimilitude += nSimilitude
-        neighbourCount += 1
-    
-    if neighbourCount == 0:
-        print("ERROR: No suitable neighbours could be found. Impossible to make a prediction.")
+recommendations = []
+for pItem in range(item_size):
+    if data[pUser][pItem] != 0:
+        #print("ERROR: Rating already exists. Cannot be predicted.")
+        #print("Rating for user " + str(pUser) + " and item " + str(pItem) + " is " + str(data[pUser][pItem]) + ".")
+        continue
     else:
-        prediction = nUserMean + sumRating/sumSimilitude
-        if prediction > 5.0:
-            prediction = 5.0
-        elif prediction < 1.0:
-            prediction = 1.0
-        print("Prediction for user " + str(pUser) + " and item " + str(pItem) + " is " + str(prediction) + ".")
         
+        neighbourCount = 0
+        sumRating = 0
+        sumSimilitude = 0
+        
+        for neighbour in range(neighborhoodSize):
+            nUser = neighborhood[neighbour][0]
+            nSimilitude = neighborhood[neighbour][1]
+            nRating = data[nUser][pItem]
+            if nSimilitude <= 0 or nRating == 0:
+                continue
+            nUser_nRatings = (data[nUser] != 0).sum()
+            nUserMean = data[nUser].sum() / nUser_nRatings
+            sumRating += nSimilitude * (nRating - nUserMean)
+            sumSimilitude += nSimilitude
+            neighbourCount += 1
+        
+        if neighbourCount == 0:
+            #print("ERROR: No suitable neighbours could be found. Impossible to make a prediction.")
+            continue
+        else:
+            prediction = nUserMean + sumRating/sumSimilitude
+            if prediction > 5.0:
+                prediction = 5.0
+            elif prediction < 1.0:
+                prediction = 1.0
+            #print("Prediction for user " + str(pUser) + " and item " + str(pItem) + " is " + str(prediction) + ".")
+            recommendations.append((pItem, prediction))
+
+# Ordenamos recomendaciones por orden de silimitud
+recommendations.sort(key=operator.itemgetter(1), reverse=True)
+
+# Devolvemos los diez primeros resultados
+print("User " + str(pUser) + " recommendations:\n")
+for rec in range(50):
+    print("Item " + str(recommendations[rec][0]) + " is expected to have a " + str(recommendations[rec][1]) + " rating.")
