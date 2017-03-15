@@ -103,6 +103,8 @@ for pItem in range(item_size):
         
         for neighbour in range(neighborhoodSize):
             nItem = neighborhood[pItem][neighbour][0]
+            if data[nItem,pUser] != 0:
+                continue
             nSimilitude = neighborhood[pItem][neighbour][1]
             nRating = data[nItem,pUser]
             if nSimilitude <= 0 or nRating == 0:
